@@ -21,6 +21,9 @@ float scale = 1;
 
 struct Vertex{
     float x, y, z;
+    Vertex operator-(const Vertex& other) const {
+        return {x - other.x, y - other.y, z - other.z};
+    }//定义重载减法
 };
 struct Face {
     int v1, v2, v3;  // Vertex 
@@ -39,8 +42,8 @@ class Model{
 };
 
 struct VertexWithNormal {
-    Vector3 position;
-    Vector3 normal;
+    Vertex position;
+    Normal normal;
 };
 vector<VertexWithNormal> verticesWithNormals(model.vertices.size());
 
@@ -79,23 +82,34 @@ void Model::loadFile(string filename){
     }
 }
 
+Normal cross(const Vertex& v1, const Vertex& v2) {
+    return {
+        v1.y * v2.z - v1.z * v2.y,
+        v1.z * v2.x - v1.x * v2.z,
+        v1.x * v2.y - v1.y * v2.x
+    };
+}
+Normal normalize(const Normal& n) {
+    float length = sqrt(n.nx * n.nx + n.ny * n.ny + n.nz * n.nz);
+    return {n.nx / length, n.ny / length, n.nz / length};
+}
 void CalNormals(){
-     // 初始化每个顶点的法线为零向量
+   // 初始化每个顶点的法线为零向量
     for (VertexWithNormal& v : verticesWithNormals) {
-        v.normal = Vector3(0, 0, 0);
+        v.normal = Normal{0, 0, 0};
     }
 
     // 遍历每个面，计算面的法线，然后将这个法线加到面的每个顶点的法线上
     for (Face& f : model.faces) {
-        Vector3 v1 = model.vertices[f.v1 - 1].position;
-        Vector3 v2 = model.vertices[f.v2 - 1].position;
-        Vector3 v3 = model.vertices[f.v3 - 1].position;
+        Vertex v1 = model.vertices[f.v1 - 1];
+        Vertex v2 = model.vertices[f.v2 - 1];
+        Vertex v3 = model.vertices[f.v3 - 1];
 
-        Vector3 normal = cross(v2 - v1, v3 - v1);
+        Normal normal = cross(v2 - v1, v3 - v1);
 
-        verticesWithNormals[f.v1 - 1].normal += normal;
-        verticesWithNormals[f.v2 - 1].normal += normal;
-        verticesWithNormals[f.v3 - 1].normal += normal;
+        verticesWithNormals[f.v1 - 1].normal.nx += normal.nx;
+        verticesWithNormals[f.v2 - 1].normal.ny += normal.ny;
+        verticesWithNormals[f.v3 - 1].normal.nz += normal.nz;
     }
 
     // 遍历每个顶点，将每个顶点的法线归一化
