@@ -10,6 +10,7 @@
 #define LOWER_BOUND SCALE_GAP
 #define UPPER_BOUND 3
 #define ROTATE_GAP 5.0f
+#define USE_MYGLCUBE 1
 
 int kind = 0;//材质种类
 int mouseState = GLUT_UP;
@@ -40,18 +41,19 @@ class Model{
 
     void loadFile(string filename);
 };
+Model model;
 
-struct VertexWithNormal {
-    Vertex position;
-    Normal normal;
+struct CalculatedNormal {
+    float nx, ny, nz;
 };
-vector<VertexWithNormal> verticesWithNormals(model.vertices.size());
+vector<CalculatedNormal> calculatedNormals;
 
 void InitScene();
 void DrawScene();
 void GLCube();
+void myGLCube();
 void Nomalize();
-Model model;
+
 void Model::loadFile(string filename){
     ifstream fin(filename.c_str());
     string line;
@@ -89,34 +91,43 @@ Normal cross(const Vertex& v1, const Vertex& v2) {
         v1.x * v2.y - v1.y * v2.x
     };
 }
-Normal normalize(const Normal& n) {
+CalculatedNormal normalize(const CalculatedNormal& n) {
     float length = sqrt(n.nx * n.nx + n.ny * n.ny + n.nz * n.nz);
     return {n.nx / length, n.ny / length, n.nz / length};
 }
-void CalNormals(){
-   // 初始化每个顶点的法线为零向量
-    for (VertexWithNormal& v : verticesWithNormals) {
-        v.normal = Normal{0, 0, 0};
-    }
+float length(const Normal& n) {
+    return sqrt(n.nx * n.nx + n.ny * n.ny + n.nz * n.nz);
+}
+void CalNormals() {
+    // 初始化 calculatedNormals
+    calculatedNormals.resize(model.vertices.size());
 
-    // 遍历每个面，计算面的法线，然后将这个法线加到面的每个顶点的法线上
+    // 遍历每个面，计算面的法线，然后将这个法线乘以面的面积加到面的每个顶点的法线上
     for (Face& f : model.faces) {
         Vertex v1 = model.vertices[f.v1 - 1];
         Vertex v2 = model.vertices[f.v2 - 1];
         Vertex v3 = model.vertices[f.v3 - 1];
 
         Normal normal = cross(v2 - v1, v3 - v1);
+        float area = length(normal);
 
-        verticesWithNormals[f.v1 - 1].normal.nx += normal.nx;
-        verticesWithNormals[f.v2 - 1].normal.ny += normal.ny;
-        verticesWithNormals[f.v3 - 1].normal.nz += normal.nz;
+        calculatedNormals[f.v1 - 1].nx += normal.nx * area;
+        calculatedNormals[f.v1 - 1].ny += normal.ny * area;
+        calculatedNormals[f.v1 - 1].nz += normal.nz * area;
+
+        calculatedNormals[f.v2 - 1].nx += normal.nx * area;
+        calculatedNormals[f.v2 - 1].ny += normal.ny * area;
+        calculatedNormals[f.v2 - 1].nz += normal.nz * area;
+
+        calculatedNormals[f.v3 - 1].nx += normal.nx * area;
+        calculatedNormals[f.v3 - 1].ny += normal.ny * area;
+        calculatedNormals[f.v3 - 1].nz += normal.nz * area;
     }
 
     // 遍历每个顶点，将每个顶点的法线归一化
-    for (VertexWithNormal& v : verticesWithNormals) {
-        v.normal = normalize(v.normal);
+    for (CalculatedNormal& n : calculatedNormals) {
+        n = normalize(n);
     }
-
 }
 
 void SetMaterier(int kind)
@@ -124,7 +135,7 @@ void SetMaterier(int kind)
     GLfloat brass_ambient[] = { 0.329412f, 0.223529f, 0.027451f, 1.0f };
     GLfloat brass_diffuse[] = { 0.780392f, 0.568627f, 0.113725f, 1.0f };
     GLfloat brass_specular[] = { 0.992157f, 0.941176f, 0.807843f, 1.0f };
-    GLfloat brass_shininess = 27.8974f;
+    GLfloat brass_shininess = 60.8974f;
 
     GLfloat white_ambient[] = { 0.25f, 0.20725f, 0.20725f, 1.0f };
     GLfloat white_diffuse[] = { 1.0f, 0.829f, 0.829f, 1.0f };
@@ -181,6 +192,8 @@ void SetMaterier(int kind)
 void InitScene(){
     model.loadFile("bunny.obj");
     Nomalize();
+
+    CalNormals();
     glClearColor(0.0, 0.0, 0.0, 1.0);//white background
    
     glEnable(GL_LIGHT0);
@@ -224,23 +237,27 @@ void DrawScene(){
     // 定义材质
     SetMaterier(kind);
 
-    GLfloat light_position[] = {  -4.0f, 4.0f, -4.0f, 1.0f };//光源位置，第四个参数为0表示光源位于无穷远处
+    GLfloat light_position[] = {  -1.0f, 1.0f, -1.0f, 1.0f };//光源位置，第四个参数为0表示光源位于无穷远处
     glLightfv(GL_LIGHT0, GL_POSITION, light_position);
-    GLfloat light_intensity[] = { 2.0f, 2.0f, 2.0f, 1.0f };//光源强度
+    GLfloat light_intensity[] = { 1.0f, 1.0f, 1.0f, 1.0f };//光源强度
     glLightfv(GL_LIGHT0, GL_DIFFUSE, light_intensity);
     
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
-    glOrtho(-2.0f, 2.0f, -2.0f, 2.0f, -2.0f, 2.0f);
+    glOrtho(-1.0f, 1.0f, -1.0f, 1.0f, -1.0f, 1.0f);
     
     glRotatef(x_rotate, 1.0f, 0.0f, 0.0f);
     glRotatef(y_rotate, 0.0f, 1.0f, 0.0f);
     //设置相机位置和旋转角度
-    //glTranslatef(-1.0f, -1.0f, 1.0f);
+    glTranslatef(-0.4f, -0.4f, -1.0f);
     glScalef(scale, scale, scale);
 
     //绘制物质
+    #if USE_MYGLCUBE
+    myGLCube();
+    #else
     GLCube();
+    #endif
     glFlush();
     glutSwapBuffers();
 }
@@ -301,9 +318,24 @@ void mouseClick(int button, int state, int x, int y) {
     }
 }
 
-void GLCube(){
+void myGLCube(){
     glBegin(GL_TRIANGLES);
-    glScalef(0.5f, 0.5f, 0.5f);
+    for (int i = 0; i < model.faces.size(); i++) {
+        Face f = model.faces[i];
+        CalculatedNormal n1 = calculatedNormals[f.v1 - 1];
+        CalculatedNormal n2 = calculatedNormals[f.v2 - 1];
+        CalculatedNormal n3 = calculatedNormals[f.v3 - 1];
+        glNormal3f(n1.nx, n1.ny, n1.nz);
+        glVertex3f(model.vertices[f.v1 - 1].x, model.vertices[f.v1 - 1].y, model.vertices[f.v1 - 1].z);
+        glNormal3f(n2.nx, n2.ny, n2.nz);
+        glVertex3f(model.vertices[f.v2 - 1].x, model.vertices[f.v2 - 1].y, model.vertices[f.v2 - 1].z);
+        glNormal3f(n3.nx, n3.ny, n3.nz);
+        glVertex3f(model.vertices[f.v3 - 1].x, model.vertices[f.v3 - 1].y, model.vertices[f.v3 - 1].z);
+    }
+    glEnd();
+}
+void  GLCube(){
+    glBegin(GL_TRIANGLES); 
     for (int i = 0; i < model.faces.size(); i++) {
         Face f = model.faces[i];
         Normal n1 = model.normals[f.vn1 - 1];
