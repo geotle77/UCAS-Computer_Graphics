@@ -13,7 +13,8 @@ void InitScene()
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);//设置背景颜色
     glShadeModel(GL_SMOOTH);//设置着色模式
     glEnable(GL_DEPTH_TEST);//开启深度测试
-    Dragon.loadmodel("dragon.obj");
+    Dragon.loadmodel("./input_model/dragon.obj");
+    Dragon.calNormal();
     Dragon.simplify(5000);
     Dragon.export2Obj(Dragon.vertices, Dragon.faces);
 }
