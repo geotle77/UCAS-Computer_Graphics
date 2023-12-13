@@ -52,7 +52,7 @@ public:
     void export2Obj(vector<vertex> vertices, vector<face> faces);
     
 private:
-    Eigen::Matrix4d ComputePlaneEquation(face f);
+    Eigen::Matrix4d ComputePlaneEquation(face& f);
     Eigen::Matrix4d ComputeQem(vertex ver);
     float ComputeEdgeCost(const edge &e,vector<Eigen::Matrix4d>& QEM);
     edge FindMincostEdge(vector<Eigen::Matrix4d>& QEM);
@@ -97,6 +97,7 @@ void Mesh::loadmodel(string filename)
     for(auto &edge:edges){
         edgesVec.push_back(edge);
     }
+    file.close();
     face_num = faces.size();
     vertex_num = vertices.size();
     int edge_num = edges.size();
@@ -123,13 +124,13 @@ void Mesh::calNormal()
    }
 }
 
-Eigen::Matrix4d Mesh :: ComputePlaneEquation(face f)
+Eigen::Matrix4d Mesh :: ComputePlaneEquation(face& f)
 {
     Eigen::Matrix4d FlatMatrix;
     int face_index = &f - &faces[0];
-    Eigen::Vector3d normal = Eigen::Vector3d(normals[face_index].x, normals[face_index].y, normals[face_index].z);
-    Eigen::Vector3d v1 = Eigen::Vector3d(vertices[f.v1].x, vertices[f.v1].y, vertices[f.v1].z);
-    Eigen::Vector3d point = v1;
+    Eigen::Vector3f normal = Eigen::Vector3f(normals[face_index].x, normals[face_index].y, normals[face_index].z);
+    Eigen::Vector3f v1 = Eigen::Vector3f(vertices[f.v1].x, vertices[f.v1].y, vertices[f.v1].z);
+    Eigen::Vector3f point = v1;
     double d = -normal.dot(point);
     FlatMatrix << normal.x() * normal.x(), normal.x() * normal.y(), normal.x() * normal.z(), normal.x() * d,
         normal.x() * normal.y(), normal.y() * normal.y(), normal.y() * normal.z(), normal.y() * d,
@@ -141,6 +142,10 @@ Eigen::Matrix4d Mesh :: ComputePlaneEquation(face f)
 Eigen::Matrix4d Mesh:: ComputeQem(vertex ver)
 {
     Eigen::Matrix4d QEM = Eigen::Matrix4d::Zero();
+     if (ver.adjacent_faces.empty())
+    {
+        return QEM;
+    }
     for (auto &face_index : ver.adjacent_faces)
     {
         QEM += ComputePlaneEquation(faces[face_index]);
@@ -175,7 +180,7 @@ edge Mesh::FindMincostEdge(vector<Eigen::Matrix4d>& QEM)
     return min_cost_edge;
 }
 
-void Mesh::CollapseEdge(edge e,vector<Eigen::Matrix4d>& QEM)
+void Mesh::CollapseEdge(edge e, vector<Eigen::Matrix4d>& QEM)
 {
     Eigen::Vector4d v1 = Eigen::Vector4d(vertices[e.v1].x, vertices[e.v1].y, vertices[e.v1].z, 1);
     Eigen::Vector4d v2 = Eigen::Vector4d(vertices[e.v2].x, vertices[e.v2].y, vertices[e.v2].z, 1);
@@ -185,29 +190,76 @@ void Mesh::CollapseEdge(edge e,vector<Eigen::Matrix4d>& QEM)
     new_vertex.y = v.y();
     new_vertex.z = v.z();
     vertices.push_back(new_vertex);
-    int new_vertex_index = vertices.size() - 1;
+    vertices.erase(vertices.begin() + std::max(e.v1, e.v2));
+    vertices.erase(vertices.begin() + std::min(e.v1, e.v2));
+    int new_vertex_index = vertices.size()-1;
+
     for(auto &edge:edgesVec){
-        if(edge.v1 == e.v1 || edge.v2 == e.v1){
+        if(edge.v1 == e.v1 || edge.v1 == e.v2) {
             edge.v1 = new_vertex_index;
         }
-        if(edge.v1 == e.v2 || edge.v2 == e.v2){
+        if(edge.v2 == e.v1 || edge.v2 == e.v2) {
             edge.v2 = new_vertex_index;
         }
+        if(edge.v1 > e.v1) {
+            edge.v1--;
+        }
+        if(edge.v1 > e.v2) {
+            edge.v1--;
+        }
+        if(edge.v2 > e.v1) {
+            edge.v2--;
+        }
+        if(edge.v2 > e.v2) {
+            edge.v2--;
+        }
     }
-    for(auto &face : faces){
-    if(face.v1 == e.v1 || face.v1 == e.v2){
-        face.v1 = new_vertex_index;
+
+    for (auto& face : faces) {
+        if (face.v1 == e.v1 || face.v1 == e.v2) {
+            face.v1 = new_vertex_index;
+        }
+        if (face.v2 == e.v1 || face.v2 == e.v2) {
+            face.v2 = new_vertex_index;
+        }
+        if (face.v3 == e.v1 || face.v3 == e.v2) {
+            face.v3 = new_vertex_index;
+        }
+        if (face.v1 > e.v1) {
+        face.v1--;
+        }
+        if (face.v1 > e.v2) {
+            face.v1--;
+        }
+        if (face.v2 > e.v1) {
+            face.v2--;
+        }
+        if (face.v2 > e.v2) {
+            face.v2--;
+        }
+        if (face.v3 > e.v1) {
+            face.v3--;
+        }
+        if (face.v3 > e.v2) {
+            face.v3--;
+        }
     }
-    if(face.v2 == e.v1 || face.v2 == e.v2){
-        face.v2 = new_vertex_index;
-    }
-    if(face.v3 == e.v1 || face.v3 == e.v2){
-        face.v3 = new_vertex_index;
-    }
-}
-    vertices.erase(vertices.begin() + e.v1);
-    vertices.erase(vertices.begin() + e.v2);
+
+    // Remove edges associated with the deleted vertices
+    // Remove edges associated with the deleted vertices
+    edgesVec.erase(std::remove_if(edgesVec.begin(), edgesVec.end(), [&](const edge& edge) {
+    return edge.v1 == edge.v2;
+    }), edgesVec.end());
+
+    // Remove faces associated with the deleted vertices
+    faces.erase(std::remove_if(faces.begin(), faces.end(), [&](const face& face) {
+        return face.v1 == face.v2 || face.v1 == face.v3 || face.v2 == face.v3;
+    }), faces.end());
+
+    // Update the QEM vector
     QEM[new_vertex_index] = QEM[e.v1] + QEM[e.v2];
+    QEM.erase(QEM.begin() + std::max(e.v1, e.v2));
+    QEM.erase(QEM.begin() + std::min(e.v1, e.v2));
 }
 /**
  * Simplifies the mesh by reducing the number of faces to the target value.
@@ -217,16 +269,17 @@ void Mesh::CollapseEdge(edge e,vector<Eigen::Matrix4d>& QEM)
 void Mesh::simplify(int target)
 {
     vector<Eigen::Matrix4d> QEM(vertices.size());
+    
     for(auto& vertex:vertices )
     {
         QEM.push_back(ComputeQem(vertex));
     }
+    printf("the QEM calculated\n");
     while (faces.size()>target)
     {
         edge min_cost_edge = FindMincostEdge(QEM);
         CollapseEdge(min_cost_edge,QEM);
     }
-
 }
 
 

@@ -15,7 +15,7 @@ void InitScene()
     glEnable(GL_DEPTH_TEST);//开启深度测试
     Dragon.loadmodel("./input_model/dragon.obj");
     Dragon.calNormal();
-    Dragon.simplify(5000);
+    Dragon.simplify(9000);
     Dragon.export2Obj(Dragon.vertices, Dragon.faces);
 }
 void DrawScene (){

@@ -46,6 +46,17 @@
         "cinttypes": "cpp",
         "typeinfo": "cpp",
         "dense": "cpp",
-        "sstream": "cpp"
+        "sstream": "cpp",
+        "chrono": "cpp",
+        "complex": "cpp",
+        "cstring": "cpp",
+        "ctime": "cpp",
+        "map": "cpp",
+        "set": "cpp",
+        "ratio": "cpp",
+        "fstream": "cpp",
+        "semaphore": "cpp",
+        "stop_token": "cpp",
+        "thread": "cpp"
     }
 }
