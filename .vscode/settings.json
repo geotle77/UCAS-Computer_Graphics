@@ -46,6 +46,11 @@
         "cinttypes": "cpp",
         "typeinfo": "cpp",
         "dense": "cpp",
-        "sstream": "cpp"
+        "sstream": "cpp",
+        "complex": "cpp",
+        "cstring": "cpp",
+        "set": "cpp",
+        "optional": "cpp",
+        "fstream": "cpp"
     }
 }

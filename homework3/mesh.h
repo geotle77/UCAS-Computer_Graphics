@@ -247,8 +247,9 @@ void Mesh::CollapseEdge(edge e,vector<Eigen::Matrix4f>& QEM)
         }
     }
     for(auto it = edgesVec.begin(); it != edgesVec.end();){
-        if(it->v1 == it->v2){
-            it->cost = std::numeric_limits<double>::max(); // Set the cost to maximum so that it will not be selected as the min cost edge
+        if(it->v1 == e.v1 && it->v2 == e.v2){
+            it->cost = std::numeric_limits<float>::max(); // Set the cost to maximum so that it will not be selected as the min cost edge
+            break;
         }else{
             ++it;
         }
@@ -268,7 +269,7 @@ void Mesh::export2Obj(vector<vertex> vertices, vector<face> faces)
     }
     for (int i = 0; i < faces.size(); i++)
     {
-        file << "f " << faces[i].v1 << " " << faces[i].v2 << " " << faces[i].v3 << endl;
+        file << "f " << faces[i].v1++ << " " << faces[i].v2++ << " " << faces[i].v3++ << endl;
     }
     file.close();
 }
