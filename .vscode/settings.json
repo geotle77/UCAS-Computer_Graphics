@@ -51,6 +51,15 @@
         "cstring": "cpp",
         "set": "cpp",
         "optional": "cpp",
-        "fstream": "cpp"
+        "fstream": "cpp",
+        "chrono": "cpp",
+        "ratio": "cpp",
+        "condition_variable": "cpp",
+        "ctime": "cpp",
+        "list": "cpp",
+        "map": "cpp",
+        "iomanip": "cpp",
+        "mutex": "cpp",
+        "thread": "cpp"
     }
 }
