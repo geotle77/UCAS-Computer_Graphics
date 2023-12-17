@@ -13,9 +13,8 @@ void InitScene()
     glShadeModel(GL_SMOOTH);//设置着色模式
     glEnable(GL_DEPTH_TEST);//开启深度测试
     mesh Dragon("./input_model/dragon_repair.obj");
-    Dragon.Initlize();
-
-    
+    Dragon.Simplify(10000);
+    Dragon.Savemodel("./output_model/simplify_dragon.obj");
 }
 void DrawScene (){
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);//清除颜色缓存和深度缓存

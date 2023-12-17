@@ -56,7 +56,23 @@ class mesh
     private:
         MyMesh om_mesh_;
         int sizeofvalidvertex;
-        int sizeofvalidface;
+        int sizeofvalidface;  
+        vector<link> linkfaces;
+        vector<link> linkpoints;
+        vector<link> nearestpoints;
+        vector<linkheap> linkcostheaps;
+        vector<bool>validvertices;
+        vector<bool>validfaces;
+
+        vector<Eigen::Matrix4d> Q;        
+        void Initlize();
+        Eigen::Matrix4d ComputeQ(int p);
+        struct item Getcost(int pti,int ptj);
+        void MakeHeap();
+        void HeapPush(item temp);
+        void DeleteVertex();
+        Normal Normailize(int i);
+        struct item HeapPop();
     public:
         mesh(const string & model_path)
         {
@@ -71,27 +87,16 @@ class mesh
 
             // 更新顶点法线
             om_mesh_.update_normals();
-            sizeofvalidvertex=0;
+            Initlize();
+
         };
         vector<Vertex> vertices;
         vector<Face> faces;
         vector<Texture> textures;
-        vector<link> linkfaces;
-        vector<link> linkpoints;
-        vector<link> nearestpoints;
-        vector<linkheap> linkcostheaps;
         vector<Normal> normals;
         vector<Normal> vertexnormals;
-        vector<bool>validvertices;
-        vector<bool>validfaces;
-        vector<Eigen::Matrix4f> Q;
-        void Initlize();
-        Eigen::Matrix4f ComputeQ(int p);
-        struct item Getcost(int pti,int ptj);
-        void MakeHeap();
-        void HeapPush(item temp);
-        void DeleteVertex();
-        Normal Normailize(int i);
-        struct item HeapPoP();
+        
+        void Simplify(int target);
+        void Savemodel(const string & model_path);
 };
 

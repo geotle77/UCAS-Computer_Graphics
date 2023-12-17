@@ -9,6 +9,7 @@ void mesh::Initlize()
         v.y = om_mesh_.point(*v_it)[1];
         v.z = om_mesh_.point(*v_it)[2];
         vertices.push_back(v);
+        validvertices.push_back(true);
         link l;
         for (MyMesh::VertexVertexIter vv_it = om_mesh_.vv_iter(*v_it); vv_it.is_valid(); ++vv_it)
         {
@@ -17,6 +18,9 @@ void mesh::Initlize()
         linkpoints.push_back(l);
     }
     linkcostheaps.resize(vertices.size());
+    sizeofvalidvertex = vertices.size();
+
+    linkfaces.resize(vertices.size());
     for(auto it = om_mesh_.faces_begin(); it != om_mesh_.faces_end(); it++)
     {   
          Normal n;
@@ -38,8 +42,9 @@ void mesh::Initlize()
         n.nz = om_mesh_.normal(*it)[2];
         normals.push_back(n);
         faces.push_back(f);
+        validfaces.push_back(true);
     }
-    linkfaces.resize(vertices.size());
+    sizeofvalidface = faces.size();
     for(auto it = om_mesh_.faces_begin(); it != om_mesh_.faces_end(); it++)
     {
         for(auto fv_it = om_mesh_.fv_begin(*it); fv_it != om_mesh_.fv_end(*it); fv_it++)
@@ -48,15 +53,20 @@ void mesh::Initlize()
         }
     }
     Q.resize(vertices.size());
+    for(int i=0;i<vertices.size();i++)
+    {
+        Q[i] = ComputeQ(i);
+    }
+    MakeHeap();
 }
 
-Matrix4f mesh::ComputeQ(int p)//计算第p个顶点的Q矩阵
+Matrix4d mesh::ComputeQ(int p)//计算第p个顶点的Q矩阵
 {
-    Q[p] = Matrix4f::Zero();
-    Matrix4f kp;
+    Q[p] = Matrix4d::Zero();
+    Matrix4d kp;
     for(int i=0;i<linkfaces[p].size();i++)
     {
-        Vector4f plane;
+        Vector4d plane;
         plane.x() = normals[linkfaces[p][i]].nx;
         plane.y() = normals[linkfaces[p][i]].ny;
         plane.z() = normals[linkfaces[p][i]].nz;
@@ -83,7 +93,7 @@ static double Det3x3(double Qsolve[4][10],int idx)
 }
 struct item mesh::Getcost(int pti,int ptj)//计算第pti个顶点和第ptj个顶点合并后的代价
 {
-    Matrix4f Qnew;
+    Matrix4d Qnew;
     Qnew = Q[pti]+Q[ptj];
 
     double Qsolve[4][10];
@@ -106,7 +116,7 @@ struct item mesh::Getcost(int pti,int ptj)//计算第pti个顶点和第ptj个顶
         }
     }
 
-    Vector4d optimalv4;
+    Vector4d optimalv4=Vector4d::Zero();
     double temp3X3 = Det3x3(Qsolve,0);
     if(temp3X3!=0)
     {
@@ -115,14 +125,15 @@ struct item mesh::Getcost(int pti,int ptj)//计算第pti个顶点和第ptj个顶
         optimalv4.z() = Det3x3(Qsolve,3)/temp3X3;
     }
     else{
-        optimalv4.x() = 0;
-        optimalv4.y() = 0;
-        optimalv4.z() = 0;
+        optimalv4.x() = 0.0;
+        optimalv4.y() = 0.0;
+        optimalv4.z() = 0.0;
     }
-    optimalv4.w() = 1;
+    optimalv4.w() = 1.0;
 
     double cost ;
-    cost = (optimalv4.transpose()*Qnew*optimalv4).coeff(0, 0);
+    Eigen::Matrix<double, 1, 1> costMatrix = optimalv4.transpose() * Qnew * optimalv4;
+    cost = costMatrix(0,0);
     item best;
     if(!(cost>=2||cost<=-2))
     { 
@@ -164,12 +175,48 @@ void mesh::MakeHeap()
 }
 Normal mesh::Normailize(int face_idx)
 {
-
+    Face &f = faces[face_idx];
+    Normal n;
+    Vector3f v1,v2;
+    v1.x() = vertices[f.vertex[1]].x-vertices[f.vertex[0]].x;
+    v1.y() = vertices[f.vertex[1]].y-vertices[f.vertex[0]].y;
+    v1.z() = vertices[f.vertex[1]].z-vertices[f.vertex[0]].z;
+    v2.x() = vertices[f.vertex[2]].x-vertices[f.vertex[0]].x;
+    v2.y() = vertices[f.vertex[2]].y-vertices[f.vertex[0]].y;
+    v2.z() = vertices[f.vertex[2]].z-vertices[f.vertex[0]].z;
+    n.nx = v1.y()*v2.z()-v1.z()*v2.y();
+    n.ny = v1.z()*v2.x()-v1.x()*v2.z();
+    n.nz = v1.x()*v2.y()-v1.y()*v2.x();
+    return n;
+}
+struct item mesh::HeapPop()
+{
+    item best;
+    best.cost = 100000;
+    item temp;
+    int i = 0;
+    int idx = 0;
+    for(auto &it:linkcostheaps)
+    {
+        if(!it.empty()&& validvertices[i] )
+        {
+            temp = it.top();
+            if(temp.cost<best.cost && validvertices[temp.validpair.x()] && validvertices[temp.validpair.y()])
+            {
+                best = temp;
+                idx = &it-&linkcostheaps[0];
+            }
+        }
+        i++;
+    }
+    linkcostheaps[idx].pop();
+    cout << " the pair is "<<best.validpair<<" the optimival4d is"<<best.optimalv3.x<<" "<<best.optimalv3.y<<" "<<best.optimalv3.z<< endl;
+    return best;
 }
 
 void mesh::DeleteVertex()
 {
-    struct item vbest = this->HeapPoP();
+    struct item vbest = this->HeapPop();
 
     vertices.push_back(vbest.optimalv3);
     validvertices.push_back(true);
@@ -188,7 +235,7 @@ void mesh::DeleteVertex()
             if(linkfaces[todelete1][i]==linkfaces[todelete2][j])
             {    
                 validfaces[linkfaces[todelete1][i]]=false;
-                int c = faces[linkfaces[todelete1][i]].vertex[0]^faces[linkfaces[todelete1][i]].vertex[1]^faces[linkfaces[todelete1][i]].vertex[2];
+                int c = faces[linkfaces[todelete1][i]].vertex[0]^faces[linkfaces[todelete1][i]].vertex[1]^faces[linkfaces[todelete1][i]].vertex[2]^todelete1^todelete2;
                 for(int k=0;k<linkfaces[c].size();k++)
                 {
                     if(linkfaces[c][k]==linkfaces[todelete1][i])
@@ -242,8 +289,8 @@ void mesh::DeleteVertex()
             normals[linkfaces[todelete2][i]] = Normailize(linkfaces[todelete2][i]);
         }
     }
-    Q.push_back(Matrix4f::Zero());
-    Matrix4f newQ = ComputeQ(vertices.size()-1);
+    Q.push_back(Matrix4d::Zero());
+    Matrix4d newQ = ComputeQ(vertices.size()-1);
     linkheap nullpair;
     linkcostheaps.push_back(nullpair);
     link ano;
@@ -321,3 +368,40 @@ void mesh::DeleteVertex()
     }
 }
 
+void mesh::Simplify(int target)
+{
+   int opt_faces = sizeofvalidface*target/(faces.size());
+   cout << "Delete faces ... " << opt_faces << endl;
+   clock_t start, finish;
+    start = time(NULL);
+    while(sizeofvalidface>opt_faces)
+    {
+         DeleteVertex();
+    }
+    finish = time(NULL);
+    cout << "Delete faces done!" << endl;
+    cout << "Time cost: " << (double)(finish - start) << "s" << endl;
+}
+
+void mesh::Savemodel(const string & model_path)
+{
+    cout << "Save model ... " << endl;
+
+    
+    ofstream file(model_path);
+    if (!file.is_open()) {
+        cout << "Failed to open the file." << endl;
+        return;
+    }
+    // Write vertices
+    for (const auto& vertex : vertices) {
+        file << "v " << vertex.x << " " << vertex.y << " " << vertex.z << "\n";
+    }
+    // Write faces
+    for (const auto& face : faces) {
+        if (!validfaces[&face - &faces[0]]) continue;
+        file << "f " << (face.vertex[0] + 1) << " " << (face.vertex[1] + 1) << " " << (face.vertex[2] + 1) << "\n";
+    }
+    file.close();
+    cout << "Model saved." << endl;
+}
