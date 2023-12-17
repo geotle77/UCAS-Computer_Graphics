@@ -17,7 +17,6 @@ void mesh::Initlize()
         }
         linkpoints.push_back(l);
     }
-    linkcostheaps.resize(vertices.size());
     sizeofvalidvertex = vertices.size();
 
     linkfaces.resize(vertices.size());
@@ -120,9 +119,9 @@ struct item mesh::Getcost(int pti,int ptj)//计算第pti个顶点和第ptj个顶
     double temp3X3 = Det3x3(Qsolve,0);
     if(temp3X3!=0)
     {
-        optimalv4.x() = Det3x3(Qsolve,1)/temp3X3;
-        optimalv4.y() = Det3x3(Qsolve,2)/temp3X3;
-        optimalv4.z() = Det3x3(Qsolve,3)/temp3X3;
+        optimalv4.x() = -Det3x3(Qsolve,1)/temp3X3;
+        optimalv4.y() = -Det3x3(Qsolve,2)/temp3X3;
+        optimalv4.z() = -Det3x3(Qsolve,3)/temp3X3;
     }
     else{
         optimalv4.x() = 0.0;
@@ -147,18 +146,25 @@ struct item mesh::Getcost(int pti,int ptj)//计算第pti个顶点和第ptj个顶
     best.validpair.y()=ptj;
     return best;
 }
-
+//TODO:waiting for debug
 void mesh::HeapPush(item temp)
 {
-    linkheap &heap1 = linkcostheaps[temp.validpair.x()];
-    linkheap &heap2 = linkcostheaps[temp.validpair.y()];
-    heap2.push(temp);
-    heap1.push(temp);
+    auto insertPos = std::upper_bound(costheap.begin(), costheap.end(), temp, CompareCost());
+    int idx = insertPos - costheap.begin();
+    costheap.insert(insertPos, temp);
+    linkcostheaps[temp.validpair.x()].push_back(idx);
+    linkcostheaps[temp.validpair.y()].push_back(idx);
+    for(auto &it:linkcostheaps){
+        for(auto &it2:it){
+            if(it2>idx)
+                it2++;
+        }
+    }
 }
 void mesh::MakeHeap()
 {
     cout << "MakeHeap....." << endl;
-    linkheap null;
+    link null;
     for(int i=0;i<vertices.size();i++)
     {
         linkcostheaps.push_back(null);
@@ -191,26 +197,8 @@ Normal mesh::Normailize(int face_idx)
 }
 struct item mesh::HeapPop()
 {
-    item best;
-    best.cost = 100000;
-    item temp;
-    int i = 0;
-    int idx = 0;
-    for(auto &it:linkcostheaps)
-    {
-        if(!it.empty()&& validvertices[i] )
-        {
-            temp = it.top();
-            if(temp.cost<best.cost && validvertices[temp.validpair.x()] && validvertices[temp.validpair.y()])
-            {
-                best = temp;
-                idx = &it-&linkcostheaps[0];
-            }
-        }
-        i++;
-    }
-    linkcostheaps[idx].pop();
-    cout << " the pair is "<<best.validpair<<" the optimival4d is"<<best.optimalv3.x<<" "<<best.optimalv3.y<<" "<<best.optimalv3.z<< endl;
+    item best = costheap.front();
+    pop_heap(costheap.begin(),costheap.end(),CompareCost());
     return best;
 }
 
@@ -242,8 +230,9 @@ void mesh::DeleteVertex()
                     {
                         linkfaces[c].erase(linkfaces[c].begin()+k);
                     }
-                    sizeofvalidface--;
+                    
                 }
+                sizeofvalidface--;
             }
         }
     }
@@ -258,13 +247,13 @@ void mesh::DeleteVertex()
             {
                 faces[linkfaces[todelete1][i]].vertex[0]=vertices.size()-1;
             }
-            else if(faces[linkfaces[todelete1][i]].vertex[0]==todelete2)
-            {
-                faces[linkfaces[todelete1][i]].vertex[0]=vertices.size()-1;
-            }
             else if(faces[linkfaces[todelete1][i]].vertex[1]==todelete1)
             {
                 faces[linkfaces[todelete1][i]].vertex[1]=vertices.size()-1;
+            }
+            else if(faces[linkfaces[todelete1][i]].vertex[2]==todelete1)
+            {
+                faces[linkfaces[todelete1][i]].vertex[2]=vertices.size()-1;
             }
             normals[linkfaces[todelete1][i]] = Normailize(linkfaces[todelete1][i]);
         }
@@ -274,73 +263,58 @@ void mesh::DeleteVertex()
         if(validfaces[linkfaces[todelete2][i]])
         {
             linkfaces.rbegin()->push_back(linkfaces[todelete2][i]);
-            if(faces[linkfaces[todelete2][i]].vertex[0]==todelete1)
+            if(faces[linkfaces[todelete2][i]].vertex[0]==todelete2)
             {
                 faces[linkfaces[todelete2][i]].vertex[0]=vertices.size()-1;
             }
-            else if(faces[linkfaces[todelete2][i]].vertex[0]==todelete2)
-            {
-                faces[linkfaces[todelete2][i]].vertex[0]=vertices.size()-1;
-            }
-            else if(faces[linkfaces[todelete2][i]].vertex[1]==todelete1)
+            else if(faces[linkfaces[todelete2][i]].vertex[1]==todelete2)
             {
                 faces[linkfaces[todelete2][i]].vertex[1]=vertices.size()-1;
+            }
+            else if(faces[linkfaces[todelete2][i]].vertex[2]==todelete1)
+            {
+                faces[linkfaces[todelete2][i]].vertex[2]=vertices.size()-1;
             }
             normals[linkfaces[todelete2][i]] = Normailize(linkfaces[todelete2][i]);
         }
     }
     Q.push_back(Matrix4d::Zero());
     Matrix4d newQ = ComputeQ(vertices.size()-1);
-    linkheap nullpair;
+    
+    link nullpair;
     linkcostheaps.push_back(nullpair);
     link ano;
     for(int i=0;i<linkcostheaps[todelete1].size();i++)
     {
         int anopoint =0;
-        priority_queue<item, std::vector<item>, CompareCost> &heap = linkcostheaps[todelete1];
-        priority_queue<item, std::vector<item>, CompareCost> temp_q;
-        vector<item> temp_v;
-        while(!heap.empty())
+        if(costheap[linkcostheaps[todelete1][i]].validpair.x()==todelete1)
         {
-            temp_v.push_back(heap.top());
-            temp_q.push(heap.top());
-            heap.pop();
+            anopoint = costheap[linkcostheaps[todelete1][i]].validpair.y();
         }
-        heap = temp_q;
-        if(temp_v[i].validpair.x()==todelete1)
-        anopoint = temp_v[i].validpair.y();
         else 
-        anopoint = temp_v[i].validpair.x();
+            anopoint = costheap[linkcostheaps[todelete1][i]].validpair.x();
         if(validvertices[anopoint])
         {
-            ano.push_back(anopoint);
+           ano.push_back(anopoint);
         }
     }
     for(int i=0;i<linkcostheaps[todelete2].size();i++)
     {
         int anopoint =0;
-        priority_queue<item, std::vector<item>, CompareCost> &heap = linkcostheaps[todelete2];
-        priority_queue<item, std::vector<item>, CompareCost> temp_q;
-        vector<item> temp_v;
-        while(!heap.empty())
+        if(costheap[linkcostheaps[todelete2][i]].validpair.x()==todelete2)
         {
-            temp_v.push_back(heap.top());
-            temp_q.push(heap.top());
-            heap.pop();
+            anopoint = costheap[linkcostheaps[todelete2][i]].validpair.y();
         }
-        heap = temp_q;
-        if(temp_v[i].validpair.x()==todelete2)
-        anopoint = temp_v[i].validpair.y();
         else 
-        anopoint = temp_v[i].validpair.x();
+            anopoint = costheap[linkcostheaps[todelete2][i]].validpair.x();
         if(validvertices[anopoint])
         {
-            ano.push_back(anopoint);
+           ano.push_back(anopoint);
         }
     }
     sort(ano.begin(),ano.end());
     int p=1;
-    for(int i=0;i<ano.size();i++)
+    for(int i=1;i<ano.size();i++)
     {
         if(ano[i]!=ano[i-1])
         {
@@ -350,16 +324,9 @@ void mesh::DeleteVertex()
     }
     ano.erase(ano.begin()+p,ano.end());
     nearestpoints.push_back(ano);
-    int tempsize = linkcostheaps[todelete1].size();
-    for(int i=0;i<tempsize;i++)
-    {
-        linkcostheaps[todelete1].pop();
-    }
-    tempsize = linkcostheaps[todelete2].size();
-    for(int i=0;i<tempsize;i++)
-    {
-        linkcostheaps[todelete2].pop();
-    }
+    linkcostheaps[todelete1].clear();
+    linkcostheaps[todelete2].clear();
+    costheap.pop_back();
     for(int i=0;i<ano.size();i++)
     {
         item temp;
@@ -394,12 +361,15 @@ void mesh::Savemodel(const string & model_path)
         return;
     }
     // Write vertices
+    file<<"# "<<vertices.size()<<" vertices"<<endl;
+    file<<"# "<<sizeofvalidface<<" faces"<<endl;
     for (const auto& vertex : vertices) {
         file << "v " << vertex.x << " " << vertex.y << " " << vertex.z << "\n";
     }
     // Write faces
     for (const auto& face : faces) {
         if (!validfaces[&face - &faces[0]]) continue;
+        if (!validvertices[face.vertex[0]] || !validvertices[face.vertex[1]] || !validvertices[face.vertex[2]]) continue;
         file << "f " << (face.vertex[0] + 1) << " " << (face.vertex[1] + 1) << " " << (face.vertex[2] + 1) << "\n";
     }
     file.close();

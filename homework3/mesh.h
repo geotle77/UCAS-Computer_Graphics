@@ -42,14 +42,18 @@ struct item{
   double cost;
   Vertex optimalv3;
   Vector2i validpair;
+  bool operator==(const item& other) const {
+        return {this->validpair.x() == other.validpair.x() && this->validpair.y() == other.validpair.y()&&this->cost == other.cost};
+    }
 };
 struct CompareCost {
     bool operator()(item const& a, item const& b) {
-        return a.cost > b.cost; // 注意这里是大于符号，因为我们要实现最小堆
+        return a.cost < b.cost; // 注意这里是大于符号，因为我们要实现最小堆
     }
 };
 typedef vector<int> link;
 typedef priority_queue<item, std::vector<item>, CompareCost> linkheap;
+
 
 class mesh
 {
@@ -60,10 +64,10 @@ class mesh
         vector<link> linkfaces;
         vector<link> linkpoints;
         vector<link> nearestpoints;
-        vector<linkheap> linkcostheaps;
+        vector<link> linkcostheaps;
         vector<bool>validvertices;
         vector<bool>validfaces;
-
+        vector<item> costheap;
         vector<Eigen::Matrix4d> Q;        
         void Initlize();
         Eigen::Matrix4d ComputeQ(int p);
