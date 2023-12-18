@@ -43,7 +43,7 @@ struct item{
   Vertex optimalv3;
   Vector2i validpair;
   bool operator==(const item& other) const {
-        return {this->validpair.x() == other.validpair.x() && this->validpair.y() == other.validpair.y()&&this->cost == other.cost};
+        return {(this->validpair.x() == other.validpair.x() && this->validpair.y() == other.validpair.y()||this->validpair.x() == other.validpair.y() && this->validpair.x() == other.validpair.y())&&this->cost == other.cost};
     }
 };
 struct CompareCost {
@@ -67,6 +67,7 @@ class mesh
         vector<link> linkcostheaps;
         vector<bool>validvertices;
         vector<bool>validfaces;
+        vector<bool>validcostheaps;
         vector<item> costheap;
         vector<Eigen::Matrix4d> Q;        
         void Initlize();

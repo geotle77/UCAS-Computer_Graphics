@@ -149,15 +149,26 @@ struct item mesh::Getcost(int pti,int ptj)//计算第pti个顶点和第ptj个顶
 //TODO:waiting for debug
 void mesh::HeapPush(item temp)
 {
+    bool repeat = false;
     auto insertPos = std::upper_bound(costheap.begin(), costheap.end(), temp, CompareCost());
-    int idx = insertPos - costheap.begin();
-    costheap.insert(insertPos, temp);
-    linkcostheaps[temp.validpair.x()].push_back(idx);
-    linkcostheaps[temp.validpair.y()].push_back(idx);
-    for(auto &it:linkcostheaps){
-        for(auto &it2:it){
-            if(it2>idx)
-                it2++;
+    
+    for(auto &it:costheap){
+        if(it==temp){
+            repeat = true;
+            break;
+        }
+    }
+    if(!repeat){
+        int idx = insertPos - costheap.begin();
+        costheap.insert(insertPos, temp);
+        validcostheaps.insert(validcostheaps.begin()+idx,true);
+        linkcostheaps[temp.validpair.x()].push_back(idx);
+        linkcostheaps[temp.validpair.y()].push_back(idx);
+        for(auto &it:linkcostheaps){
+            for(auto &it2:it){
+                if(it2>idx)
+                    it2++;
+            }
         }
     }
 }
@@ -176,6 +187,7 @@ void mesh::MakeHeap()
             item temp;
             temp = Getcost(i,linkpoints[i][j]);
             HeapPush(temp);
+            validcostheaps.push_back(true);
         }
     }
 }
@@ -197,8 +209,16 @@ Normal mesh::Normailize(int face_idx)
 }
 struct item mesh::HeapPop()
 {
-    item best = costheap.front();
-    pop_heap(costheap.begin(),costheap.end(),CompareCost());
+    
+    int idx = 0;
+    while(!validcostheaps[idx]&&!(validvertices[costheap[idx].validpair.x()]&&validvertices[costheap[idx].validpair.y()]&&(costheap[idx].validpair.y()!=costheap[idx].validpair.x())))
+    {
+        if((costheap[idx].validpair.y()==costheap[idx].validpair.x())||!validvertices[costheap[idx].validpair.x()]&&!validvertices[costheap[idx].validpair.y()])
+            validcostheaps[idx]=false;
+        idx++;
+    }
+    item best = costheap[idx];
+    validcostheaps[idx]=false;
     return best;
 }
 
@@ -220,15 +240,17 @@ void mesh::DeleteVertex()
     {
         for(int j =0;j<linkfaces[todelete2].size();j++)
         {
-            if(linkfaces[todelete1][i]==linkfaces[todelete2][j])
+            if(linkfaces[todelete1][i]==linkfaces[todelete2][j])//两个顶点共享一条边,删除共享的面
             {    
                 validfaces[linkfaces[todelete1][i]]=false;
-                int c = faces[linkfaces[todelete1][i]].vertex[0]^faces[linkfaces[todelete1][i]].vertex[1]^faces[linkfaces[todelete1][i]].vertex[2]^todelete1^todelete2;
+                int c = faces[linkfaces[todelete1][i]].vertex[0]^faces[linkfaces[todelete1][i]].vertex[1]^faces[linkfaces[todelete1][i]].vertex[2]^todelete1^todelete2;//c为共享面的另一个顶点
                 for(int k=0;k<linkfaces[c].size();k++)
-                {
+                {   
+                    if(c>linkfaces.size())
+                        return;
                     if(linkfaces[c][k]==linkfaces[todelete1][i])
                     {
-                        linkfaces[c].erase(linkfaces[c].begin()+k);
+                        linkfaces[c].erase(linkfaces[c].begin()+k);//
                     }
                     
                 }
@@ -271,7 +293,7 @@ void mesh::DeleteVertex()
             {
                 faces[linkfaces[todelete2][i]].vertex[1]=vertices.size()-1;
             }
-            else if(faces[linkfaces[todelete2][i]].vertex[2]==todelete1)
+            else if(faces[linkfaces[todelete2][i]].vertex[2]==todelete2)
             {
                 faces[linkfaces[todelete2][i]].vertex[2]=vertices.size()-1;
             }
@@ -322,16 +344,31 @@ void mesh::DeleteVertex()
             p++;
         }
     }
-    ano.erase(ano.begin()+p,ano.end());
+    if(p<ano.size())
+        ano.erase(ano.begin()+p,ano.end());
     nearestpoints.push_back(ano);
+    for(auto it:linkcostheaps[todelete1])
+    {
+        validcostheaps[it]=false;
+    }
+    for(auto it:linkcostheaps[todelete2])
+    {
+        validcostheaps[it]=false;
+    }
     linkcostheaps[todelete1].clear();
     linkcostheaps[todelete2].clear();
-    costheap.pop_back();
+    link null;
+    linkpoints.push_back(null);
     for(int i=0;i<ano.size();i++)
     {
+        
+        linkpoints.rbegin()->push_back(ano[i]);
         item temp;
-        temp = Getcost(vertices.size()-1,ano[i]);
-        HeapPush(temp);
+        if(validvertices[ano[i]])
+        {
+            temp = Getcost(vertices.size()-1,ano[i]);
+            HeapPush(temp);
+        }
     }
 }
 
