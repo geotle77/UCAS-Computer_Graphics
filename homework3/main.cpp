@@ -28,7 +28,7 @@ int main(int argc, char** argv)
 {
     glutInit(&argc, argv);
     mesh Dragon("./input_model/dragon_repair.obj");
-    Dragon.Simplify(10000);
+    Dragon.Simplify(1000);
     Dragon.Savemodel("./output_model/simplify.obj");
     //glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
     //glutInitWindowSize(600, 600);//设置窗口大小
