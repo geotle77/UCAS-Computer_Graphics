@@ -13,7 +13,7 @@ void InitScene()
     glShadeModel(GL_SMOOTH);//设置着色模式
     glEnable(GL_DEPTH_TEST);//开启深度测试
     mesh Dragon("./input_model/dragon_repair.obj");
-    Dragon.Simplify(5000);
+    Dragon.Simplify(1000);
     Dragon.Savemodel("./output_model/simplify.obj");
 }
 void DrawScene (){

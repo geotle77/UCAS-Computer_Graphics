@@ -43,7 +43,7 @@ struct item{
   Vertex optimalv3;
   Vector2i validpair;
   bool operator==(const item& other) const {
-        return {(this->validpair.x() == other.validpair.x() && this->validpair.y() == other.validpair.y()||this->validpair.x() == other.validpair.y() && this->validpair.x() == other.validpair.y())&&this->cost == other.cost};
+        return {(this->validpair.x() == other.validpair.x() && this->validpair.y() == other.validpair.y()||this->validpair.x() == other.validpair.y() && this->validpair.y() == other.validpair.x())&&this->cost == other.cost};
     }
 };
 struct CompareCost {
@@ -93,7 +93,6 @@ class mesh
             // 更新顶点法线
             om_mesh_.update_normals();
             Initlize();
-
         };
         vector<Vertex> vertices;
         vector<Face> faces;

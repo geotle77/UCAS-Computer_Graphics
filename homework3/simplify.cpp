@@ -56,7 +56,7 @@ void mesh::Initlize()
     {
         Q[i] = ComputeQ(i);
     }
-    MakeHeap();
+
 }
 
 Matrix4d mesh::ComputeQ(int p)//计算第p个顶点的Q矩阵
@@ -150,6 +150,7 @@ struct item mesh::Getcost(int pti,int ptj)//计算第pti个顶点和第ptj个顶
 void mesh::HeapPush(item temp)
 {
     bool repeat = false;
+    //cost too much time!
     auto insertPos = std::upper_bound(costheap.begin(), costheap.end(), temp, CompareCost());
     
     for(auto &it:costheap){
@@ -187,7 +188,6 @@ void mesh::MakeHeap()
             item temp;
             temp = Getcost(i,linkpoints[i][j]);
             HeapPush(temp);
-            validcostheaps.push_back(true);
         }
     }
 }
@@ -211,9 +211,10 @@ struct item mesh::HeapPop()
 {
     
     int idx = 0;
+    //cost too much time!
     while(!validcostheaps[idx]&&!(validvertices[costheap[idx].validpair.x()]&&validvertices[costheap[idx].validpair.y()]&&(costheap[idx].validpair.y()!=costheap[idx].validpair.x())))
     {
-        if((costheap[idx].validpair.y()==costheap[idx].validpair.x())||!validvertices[costheap[idx].validpair.x()]&&!validvertices[costheap[idx].validpair.y()])
+        if((idx < costheap.size() && costheap[idx].validpair.y()==costheap[idx].validpair.x())||!validvertices[costheap[idx].validpair.x()]&&!validvertices[costheap[idx].validpair.y()])
             validcostheaps[idx]=false;
         idx++;
     }
@@ -374,6 +375,7 @@ void mesh::DeleteVertex()
 
 void mesh::Simplify(int target)
 {
+    MakeHeap();
    int opt_faces = sizeofvalidface*target/(faces.size());
    cout << "Delete faces ... " << opt_faces << endl;
    clock_t start, finish;
