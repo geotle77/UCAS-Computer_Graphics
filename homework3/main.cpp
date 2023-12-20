@@ -20,11 +20,11 @@ int main(int argc, char** argv)
         cout<<"the output file is "<<output_name<<endl;
         if(ratio >1||ratio<0){
             while (true) {
+                cout << "The ratio is invalid, please input a number between 0 and 1: ";
                 cin >> ratio;
                 if (ratio > 0 && ratio < 1) {
                     break;
                 }
-            cout << "The ratio is invalid, please input a number between 0 and 1: ";
             }
         }
         cout<<"the ratio is "<<ratio<<endl;

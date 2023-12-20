@@ -85,7 +85,7 @@ class mesh
                 if (!OpenMesh::IO::read_mesh(om_mesh_, model_path))
             {
                 std::cerr << "Error loading model: " << model_path << std::endl;
-                // 这里你可以选择抛出一个异常，或者做其他的错误处理
+                exit(1);
             }
              // 请求顶点法线属性
             om_mesh_.request_vertex_normals();
