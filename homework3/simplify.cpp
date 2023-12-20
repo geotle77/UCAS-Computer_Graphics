@@ -400,16 +400,27 @@ void mesh::Savemodel(const string & model_path)
         return;
     }
     // Write vertices
-    file<<"# "<<vertices.size()<<" vertices"<<endl;
+    std::unordered_map<int,int> vertex_index_map;
+    std::vector<Vertex> new_valid_vertices;
+    for(int i=0;i<vertices.size();i++)
+    {
+        if(validvertices[i])
+        {
+            vertex_index_map[i] = new_valid_vertices.size();
+            new_valid_vertices.push_back(vertices[i]);
+        }
+    }
+    file<<"# "<<new_valid_vertices.size()<<" vertices"<<endl;
     file<<"# "<<sizeofvalidface<<" faces"<<endl;
-    for (const auto& vertex : vertices) {
+    for (const auto& vertex : new_valid_vertices) {
         file << "v " << vertex.x << " " << vertex.y << " " << vertex.z << "\n";
     }
+
     // Write faces
     for (const auto& face : faces) {
         if (!validfaces[&face - &faces[0]]) continue;
         if (!validvertices[face.vertex[0]] || !validvertices[face.vertex[1]] || !validvertices[face.vertex[2]]) continue;
-        file << "f " << (face.vertex[0] + 1) << " " << (face.vertex[1] + 1) << " " << (face.vertex[2] + 1) << "\n";
+        file << "f " << (vertex_index_map[face.vertex[0]] + 1) << " " << (vertex_index_map[face.vertex[1]] + 1) << " " << (vertex_index_map[face.vertex[2]] + 1) << "\n";
     }
     file.close();
     cout << "Model saved." << endl;
