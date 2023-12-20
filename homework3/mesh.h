@@ -101,7 +101,7 @@ class mesh
         vector<Normal> normals;
         vector<Normal> vertexnormals;
         
-        void Simplify(int target);
+        void Simplify(double target);
         void Savemodel(const string & model_path);
 };
 

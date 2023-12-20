@@ -124,9 +124,9 @@ struct item mesh::Getcost(int pti,int ptj)//计算第pti个顶点和第ptj个顶
         optimalv4.z() = -Det3x3(Qsolve,3)/temp3X3;
     }
     else{
-        optimalv4.x() = 0.0;
-        optimalv4.y() = 0.0;
-        optimalv4.z() = 0.0;
+        optimalv4.x() = (vertices[pti].x+vertices[ptj].x)/2;
+        optimalv4.y() = (vertices[pti].y+vertices[ptj].y)/2;
+        optimalv4.z() = (vertices[pti].z+vertices[ptj].z)/2;
     }
     optimalv4.w() = 1.0;
 
@@ -373,10 +373,10 @@ void mesh::DeleteVertex()
     }
 }
 
-void mesh::Simplify(int target)
+void mesh::Simplify(double target)
 {
     MakeHeap();
-   int opt_faces = sizeofvalidface*target/(faces.size());
+   int opt_faces = sizeofvalidface*target;
    cout << "Delete faces ... " << opt_faces << endl;
    clock_t start, finish;
     start = time(NULL);
