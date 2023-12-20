@@ -12,9 +12,7 @@ void InitScene()
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);//设置背景颜色
     glShadeModel(GL_SMOOTH);//设置着色模式
     glEnable(GL_DEPTH_TEST);//开启深度测试
-    mesh Dragon("./input_model/dragon_repair.obj");
-    Dragon.Simplify(1000);
-    Dragon.Savemodel("./output_model/simplify.obj");
+
 }
 void DrawScene (){
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);//清除颜色缓存和深度缓存
@@ -29,6 +27,9 @@ void DrawScene (){
 int main(int argc, char** argv)
 {
     glutInit(&argc, argv);
+    mesh Dragon("./input_model/dragon_repair.obj");
+    Dragon.Simplify(5271);
+    Dragon.Savemodel("./output_model/simplify.obj");
     //glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
     //glutInitWindowSize(600, 600);//设置窗口大小
     //glutInitWindowPosition(100, 100);//设置窗口位置
