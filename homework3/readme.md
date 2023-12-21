@@ -2,7 +2,7 @@
 ## 使用说明
 在终端输入**make all**编译网格简化实验代码,运行**make run**运行代码，其后可以跟上参数，以控制简化的模型、比例已经简化后的命名，例如
 ```
-make run ARGS="dragon_repair simplified_dragon2 0.6"
+make run ARGS="dragon_repair simplified_dragon 0.6"
 ```
 如果不输入参数名，则默认执行
 ```
@@ -115,6 +115,23 @@ error while loading shared libraries: libOpenMeshCore.so.9.0: cannot open shared
 ```
 export LD_LIBRARY_PATH=/usr/local/lib/:$LD_LIBRARY_PATH
 ```
+## 正常运行界面
+如果上述配置没有问题，运行代码后将出现以下界面
+```
+./main dragon_repair simplified_dragon 0.5
+the input file is dragon_repair
+the output file is simplified_dragon
+the ratio is 0.5
+start simplify,it may take some minutes,please waiting patiently!
+MakeHeap.....
+Delete faces ... 5208
+[======================================================================] 100 %
+Delete faces done!
+Time cost: 60s
+Save model ... 
+Model saved.
+```
+进度条可以标明简化进度，简化结束后，模型将被保存在output_model文件夹下。
 
 ## 代码部分说明
 实验代码基本都在讲义PPT中给出，这里主要说一下类的定义和如何使用openmesh。

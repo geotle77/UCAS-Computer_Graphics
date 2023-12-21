@@ -9,6 +9,7 @@
 #include <string>
 #include<unordered_map>
 #include <Eigen/Dense>
+#include <iomanip>
 
 #include <OpenMesh/Core/IO/MeshIO.hh>
 #include <OpenMesh/Core/Mesh/TriMesh_ArrayKernelT.hh>

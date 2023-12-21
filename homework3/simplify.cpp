@@ -373,6 +373,19 @@ void mesh::DeleteVertex()
     }
 }
 
+static void print_progress(double progress)
+{
+    int bar_width = 70;
+    std::cout << "[";
+    int pos = bar_width * progress;
+    for (int i = 0; i < bar_width; ++i) {
+        if (i < pos) std::cout << "=";
+        else if (i == pos) std::cout << ">";
+        else std::cout << " ";
+    }
+    std::cout << "] " << int(progress * 100.0) << " %\r";
+    std::cout.flush();
+}
 void mesh::Simplify(double target)
 {
     MakeHeap();
@@ -380,11 +393,15 @@ void mesh::Simplify(double target)
    cout << "Delete faces ... " << opt_faces << endl;
    clock_t start, finish;
     start = time(NULL);
+    int need_to_delete = sizeofvalidface - opt_faces;
     while(sizeofvalidface>opt_faces)
     {
-         DeleteVertex();
+        DeleteVertex();
+        double progress = (double)(need_to_delete - (sizeofvalidface - opt_faces)) / need_to_delete;
+        print_progress(progress);
     }
     finish = time(NULL);
+    cout << endl;
     cout << "Delete faces done!" << endl;
     cout << "Time cost: " << (double)(finish - start) << "s" << endl;
 }
