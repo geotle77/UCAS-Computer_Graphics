@@ -47,6 +47,7 @@
         "typeinfo": "cpp",
         "dense": "cpp",
         "sstream": "cpp",
+<<<<<<< HEAD
         "chrono": "cpp",
         "complex": "cpp",
         "cstring": "cpp",
@@ -57,6 +58,21 @@
         "fstream": "cpp",
         "semaphore": "cpp",
         "stop_token": "cpp",
+=======
+        "complex": "cpp",
+        "cstring": "cpp",
+        "set": "cpp",
+        "optional": "cpp",
+        "fstream": "cpp",
+        "chrono": "cpp",
+        "ratio": "cpp",
+        "condition_variable": "cpp",
+        "ctime": "cpp",
+        "list": "cpp",
+        "map": "cpp",
+        "iomanip": "cpp",
+        "mutex": "cpp",
+>>>>>>> 3bacb0b9800f3398d3671e0ae8356e93197d9386
         "thread": "cpp"
     }
 }
