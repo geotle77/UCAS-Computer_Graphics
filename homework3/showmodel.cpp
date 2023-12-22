@@ -108,8 +108,6 @@ void DrawScene(){
 
     GLfloat glfLight[] = { -4.0f, 4.0f, -4.0f, 0.0f };;//光源位置，第四个参数为0表示光源位于无穷远处
     glLightfv(GL_LIGHT0, GL_POSITION, glfLight);
-    GLfloat light_intensity[] = { 1.0f, 1.0f, 1.0f, 1.0f };//光源强度
-    glLightfv(GL_LIGHT0, GL_DIFFUSE, light_intensity);
     
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
@@ -206,10 +204,10 @@ void SetMaterier(int kind)
     GLfloat red_specular[] = { 0.7f, 0.6f, 0.6f, 1.0f };
     GLfloat red_shininess = 0.25f;
 
-    GLfloat blue_ambient[] = { 0.0215f, 0.0215f, 0.1745f, 0.55f };
-    GLfloat blue_diffuse[] = { 0.07568f, 0.07568f, 0.61424f, 0.55f };
-    GLfloat blue_specular[] = { 0.633f, 0.633f, 0.727811f, 0.55f };
-    GLfloat blue_shininess = 76.8f;
+    GLfloat gold_ambient[] = { 0.24725f, 0.1995f, 0.0745f, 1.0f };
+    GLfloat gold_diffuse[] = { 0.75164f, 0.60648f, 0.22648f, 1.0f };
+    GLfloat gold_specular[] = { 0.628281f, 0.555802f, 0.366065f, 1.0f };
+    GLfloat gold_shininess = 51.2f;
     switch (kind)
     {
         case 0:
@@ -238,10 +236,10 @@ void SetMaterier(int kind)
             break;
         case 3:
             {
-                glMaterialfv(GL_FRONT, GL_AMBIENT, blue_ambient);
-                glMaterialfv(GL_FRONT, GL_DIFFUSE, blue_diffuse);
-                glMaterialfv(GL_FRONT, GL_SPECULAR, blue_specular);
-                glMaterialf(GL_FRONT, GL_SHININESS, blue_shininess);
+                glMaterialfv(GL_FRONT, GL_AMBIENT, gold_ambient);
+                glMaterialfv(GL_FRONT, GL_DIFFUSE, gold_diffuse);
+                glMaterialfv(GL_FRONT, GL_SPECULAR,gold_specular);
+                glMaterialf(GL_FRONT, GL_SHININESS, gold_shininess);
             }
             break;
 

@@ -334,3 +334,30 @@ QEM算法流程如下：
 非常惨烈
 ![bad_example](./example/bad_example.png)
 非常多破洞，最好检查出的原因是因为面的顶点索引更新条件错误，少连了一些边，但是误差矩阵显然是正确的，没出现奇怪的形状。
+
+## 渲染效果
+为了方便显示模型，利用的宏定义来控制是否需要简化，也就是当第一次运行模型简化结束后，直接从输出位置导入简化后模型进行渲染,默认是需要进行简化。
+```
+   #if NEED_SIMPLIY
+        mesh Dragon(input_path);
+        Dragon.Simplify(ratio);
+        Dragon.Savemodel(output_path);
+        mesh Simplify_Dragon(output_path);
+        #else
+        mesh Simplify_Dragon(input_path);
+        #endif 
+```
+如果不需要简化，则默认输出简化后模型效果，**注意**前提是已经至少进行了一次模型简化，保证output_model文件夹下存在模型。
+
+### 原图效果
+![1 test](./example/dragon_V_100.png)
+### 50%简化效果
+顶点法线平行效果：
+![0.5 test](./example/dragon_F_50.png)
+顶点法线原始效果
+![0.5 test](./example/dragon_V_50.png)
+### 30%简化效果
+顶点法线平行效果：
+![0.5 test](./example/dragon_F_30.png)
+顶点法线原始效果
+![0.5 test](./example/dragon_V_30.png)

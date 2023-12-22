@@ -1,7 +1,7 @@
 #include<GL/glut.h>
 #include "mesh.h"
 #include "showmodel.h"
-
+#define NEED_SIMPLIY 1
 void output_usage()
 {
     cout<<"Usage:./main input_name output_name ratio"<<endl;
@@ -32,13 +32,16 @@ int main(int argc, char** argv)
         cout<<"start simplify,it may take some minutes,please waiting patiently!"<<endl;
         string input_path = "./input_model/"+input_name+".obj";
         string output_path = "./output_model/"+output_name+".obj";
-        //mesh Dragon(input_path);
-        //Dragon.Simplify(ratio);
-        //Dragon.Savemodel(output_path);
+        #if NEED_SIMPLIY
+        mesh Dragon(input_path);
+        Dragon.Simplify(ratio);
+        Dragon.Savemodel(output_path);
         mesh Simplify_Dragon(output_path);
+        #else
+        mesh Simplify_Dragon(output_path);
+        #endif 
         faces = Simplify_Dragon.faces;
         vertices = Simplify_Dragon.vertices;
-        vertexnormals = Simplify_Dragon.vertexnormals;
     }
     else{
         output_usage();
