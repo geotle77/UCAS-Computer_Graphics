@@ -352,12 +352,16 @@ QEM算法流程如下：
 ### 原图效果
 ![1 test](./example/dragon_V_100.png)
 ### 50%简化效果
+
 顶点法线平行效果：
 ![0.5 test](./example/dragon_F_50.png)
-顶点法线原始效果
+
+顶点法线原始效果:
 ![0.5 test](./example/dragon_V_50.png)
 ### 30%简化效果
+
 顶点法线平行效果：
 ![0.5 test](./example/dragon_F_30.png)
-顶点法线原始效果
+
+顶点法线原始效果:
 ![0.5 test](./example/dragon_V_30.png)
