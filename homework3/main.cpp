@@ -1,5 +1,6 @@
 #include<GL/glut.h>
 #include "mesh.h"
+#include "showmodel.h"
 
 void output_usage()
 {
@@ -31,19 +32,29 @@ int main(int argc, char** argv)
         cout<<"start simplify,it may take some minutes,please waiting patiently!"<<endl;
         string input_path = "./input_model/"+input_name+".obj";
         string output_path = "./output_model/"+output_name+".obj";
-        mesh Dragon(input_path);
-        Dragon.Simplify(ratio);
-        Dragon.Savemodel(output_path);
+        //mesh Dragon(input_path);
+        //Dragon.Simplify(ratio);
+        //Dragon.Savemodel(output_path);
+        mesh Simplify_Dragon(output_path);
+        faces = Simplify_Dragon.faces;
+        vertices = Simplify_Dragon.vertices;
+        vertexnormals = Simplify_Dragon.vertexnormals;
     }
     else{
         output_usage();
     }
-    //glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
-    //glutInitWindowSize(600, 600);//设置窗口大小
-    //glutInitWindowPosition(100, 100);//设置窗口位置
-    //glutCreateWindow("OpenGL");//创建窗口
-    //glutDisplayFunc(DrawScene);//显示回调函数
-    //glutMainLoop();//进入主循环
+    glutInit(&argc, argv);
+    glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB | GLUT_DEPTH);
+    glutInitWindowSize(600, 600);//设置窗口大小
+    glutInitWindowPosition(100, 100);//设置窗口位置
+    glutCreateWindow("Simplipy_Window");//创建窗口
+    InitScene();
+    glutDisplayFunc(DrawScene);//显示回调函数
+    glutSpecialFunc(SpecialKeys);
+    glutKeyboardFunc(keyboard);
+    glutMouseFunc(mouseClick);
+    glutTimerFunc(100, timer, 0); // 设置第一次调用定时器的时间
+    glutMainLoop();//进入主循环
     return 0;
 }
 

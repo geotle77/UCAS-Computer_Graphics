@@ -1,4 +1,5 @@
 #include "mesh.h"
+#include "showmodel.h"
 
 void mesh::Initlize()
 {
@@ -17,6 +18,7 @@ void mesh::Initlize()
         }
         linkpoints.push_back(l);
     }
+
     sizeofvalidvertex = vertices.size();
 
     linkfaces.resize(vertices.size());
@@ -51,12 +53,6 @@ void mesh::Initlize()
             linkfaces[fv_it->idx()].push_back(it->idx());
         }
     }
-    Q.resize(vertices.size());
-    for(int i=0;i<vertices.size();i++)
-    {
-        Q[i] = ComputeQ(i);
-    }
-
 }
 
 Matrix4d mesh::ComputeQ(int p)//计算第p个顶点的Q矩阵
@@ -388,6 +384,11 @@ static void print_progress(double progress)
 }
 void mesh::Simplify(double target)
 {
+    Q.resize(vertices.size());
+    for(int i=0;i<vertices.size();i++)
+    {
+        Q[i] = ComputeQ(i);
+    }
     MakeHeap();
    int opt_faces = sizeofvalidface*target;
    cout << "Delete faces ... " << opt_faces << endl;

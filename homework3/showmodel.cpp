@@ -1,34 +1,97 @@
 #include<GL/glut.h>
 #include "mesh.h"
-#define SCALE_GAP 0.05
-#define LOWER_BOUND SCALE_GAP
-#define UPPER_BOUND 3
-#define ROTATE_GAP 5.0f
-#define USE_MYGLCUBE 1
-
+#include "showmodel.h"
 int kind = 0;//材质种类
 int mouseState = GLUT_UP;
 int mouseButton = GLUT_LEFT_BUTTON;
 using namespace std;
-float x_rotate = 0.0;
-float y_rotate = 0.0;
-float scale = 1;
-
-
-void myGLCube(){
-
+double x_rotate = 0.0;
+double y_rotate = 0.0;
+double scale = 1;
+std::vector<Face> faces;
+std::vector<Vertex> vertices;
+std::vector<Normal> normals;
+std::vector<Normal> vertexnormals;
+Normal normalize(const Normal& n) {
+    float length = sqrt(n.nx * n.nx + n.ny * n.ny + n.nz * n.nz);
+    return {n.nx / length, n.ny / length, n.nz / length};
 }
-void  GLCube(){
+float length(const Normal& n) {
+    return sqrt(n.nx * n.nx + n.ny * n.ny + n.nz * n.nz);
+}
+Normal cross(const Vertex& v1, const Vertex& v2) {
+    return {
+        v1.y * v2.z - v1.z * v2.y,
+        v1.z * v2.x - v1.x * v2.z,
+        v1.x * v2.y - v1.y * v2.x
+    };
+}
+void CalNormals() {
+    // 初始化 calculatedNormals
+    vertexnormals.resize(vertices.size());
 
+    // 遍历每个面，计算面的法线，然后将这个法线乘以面的面积加到面的每个顶点的法线上
+    for (Face& f : faces) {
+        Vertex v1 = vertices[f.vertex[0]];
+        Vertex v2 = vertices[f.vertex[1]];
+        Vertex v3 = vertices[f.vertex[2]];
+
+        Normal normal = cross(v2 - v1, v3 - v1);
+        float area = length(normal);
+
+        vertexnormals[f.vertex[0]].nx += normal.nx * area;
+        vertexnormals[f.vertex[0]].ny += normal.ny * area;
+        vertexnormals[f.vertex[0]].nz += normal.nz * area;
+        vertexnormals[f.vertex[1]].nx += normal.nx * area;
+        vertexnormals[f.vertex[1]].ny += normal.ny * area;
+        vertexnormals[f.vertex[1]].nz += normal.nz * area;
+        vertexnormals[f.vertex[2]].nx += normal.nx * area;
+        vertexnormals[f.vertex[2]].ny += normal.ny * area;
+        vertexnormals[f.vertex[2]].nz += normal.nz * area;
+    }
+
+    // 遍历每个顶点，将每个顶点的法线归一化
+    for (Normal& n : vertexnormals) {
+        n = normalize(n);
+    }
+}
+
+void F_GLCube(){
+    glBegin(GL_TRIANGLES);
+    for(int i=0;i<faces.size();i++){
+        Normal normal1 = vertexnormals[faces[i].vertex[0]];
+        Normal normal2 = vertexnormals[faces[i].vertex[1]];
+        Normal normal3 = vertexnormals[faces[i].vertex[2]];
+        Normal mean_normal;
+        mean_normal.nx = (normal1.nx+normal2.nx+normal3.nx)/3;
+        mean_normal.ny = (normal1.ny+normal2.ny+normal3.ny)/3;
+        mean_normal.nz = (normal1.nz+normal2.nz+normal3.nz)/3;
+        for(int j=0;j<3;j++){
+            glNormal3d(mean_normal.nx, mean_normal.ny, mean_normal.nz);
+            glVertex3d(vertices[faces[i].vertex[j]].x, vertices[faces[i].vertex[j]].y, vertices[faces[i].vertex[j]].z);
+        }
+    }
+    glEnd();
+}
+void  V_GLCube(){
+    glBegin(GL_TRIANGLES);
+    for(int i=0;i<faces.size();i++){
+        Normal normal1 = vertexnormals[faces[i].normal[0]];
+        Normal normal2 = vertexnormals[faces[i].normal[1]];
+        Normal normal3 = vertexnormals[faces[i].normal[2]];
+        glNormal3d(normal1.nx, normal1.ny, normal1.nz);
+        glVertex3d(vertices[faces[i].vertex[0]].x, vertices[faces[i].vertex[0]].y, vertices[faces[i].vertex[0]].z);
+        glNormal3d(normal2.nx, normal2.ny, normal2.nz);
+        glVertex3d(vertices[faces[i].vertex[1]].x, vertices[faces[i].vertex[1]].y, vertices[faces[i].vertex[1]].z);
+        glNormal3d(normal3.nx, normal3.ny, normal3.nz);
+        glVertex3d(vertices[faces[i].vertex[2]].x, vertices[faces[i].vertex[2]].y, vertices[faces[i].vertex[2]].z);
+    }
+    glEnd();
 }
 
 void InitScene(){
-    model.loadFile("bunny.obj");
-    Nomalize();
-
+    glClearColor(0.0, 0.0, 0.0, 1.0);
     CalNormals();
-    glClearColor(0.0, 0.0, 0.0, 1.0);//white background
-   
     glEnable(GL_LIGHT0);
     glEnable(GL_LIGHTING);
     glEnable(GL_DEPTH_TEST);
@@ -43,8 +106,8 @@ void DrawScene(){
     // 定义材质
     SetMaterier(kind);
 
-    GLfloat light_position[] = {  -1.0f, 1.0f, -1.0f, 1.0f };//光源位置，第四个参数为0表示光源位于无穷远处
-    glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+    GLfloat glfLight[] = { -4.0f, 4.0f, -4.0f, 0.0f };;//光源位置，第四个参数为0表示光源位于无穷远处
+    glLightfv(GL_LIGHT0, GL_POSITION, glfLight);
     GLfloat light_intensity[] = { 1.0f, 1.0f, 1.0f, 1.0f };//光源强度
     glLightfv(GL_LIGHT0, GL_DIFFUSE, light_intensity);
     
@@ -55,14 +118,14 @@ void DrawScene(){
     glRotatef(x_rotate, 1.0f, 0.0f, 0.0f);
     glRotatef(y_rotate, 0.0f, 1.0f, 0.0f);
     //设置相机位置和旋转角度
-    glTranslatef(-0.4f, -0.4f, -1.0f);
+    glTranslatef(0.0f, 0.0f, 0.0f);
     glScalef(scale, scale, scale);
 
     //绘制物质
-    #if USE_MYGLCUBE
-    myGLCube();
+    #if USE_FACE_NORMAL
+    F_GLCube();
     #else
-    GLCube();
+    V_GLCube();
     #endif
     glFlush();
     glutSwapBuffers();
@@ -127,10 +190,11 @@ void mouseClick(int button, int state, int x, int y) {
 }
 void SetMaterier(int kind)
 {
-    GLfloat brass_ambient[] = { 0.329412f, 0.223529f, 0.027451f, 1.0f };
-    GLfloat brass_diffuse[] = { 0.780392f, 0.568627f, 0.113725f, 1.0f };
-    GLfloat brass_specular[] = { 0.992157f, 0.941176f, 0.807843f, 1.0f };
-    GLfloat brass_shininess = 60.8974f;
+    GLfloat glfMatAmbient[] = { 0.135f,0.2225f,0.1575f,0.95f };
+    GLfloat glfMatDiffuse[] = { 0.54f,0.89f,0.63f,0.95f };
+    GLfloat glfMatSpecular[] = { 0.316228f,0.316228f,0.316228f,0.95f };
+    GLfloat glfMatEmission[] = { 0.000f, 0.000f, 0.000f, 1.0f };
+    GLfloat fShininess = 12.800f;
 
     GLfloat white_ambient[] = { 0.25f, 0.20725f, 0.20725f, 1.0f };
     GLfloat white_diffuse[] = { 1.0f, 0.829f, 0.829f, 1.0f };
@@ -150,10 +214,10 @@ void SetMaterier(int kind)
     {
         case 0:
             {
-                glMaterialfv(GL_FRONT, GL_AMBIENT, brass_ambient);
-                glMaterialfv(GL_FRONT, GL_DIFFUSE, brass_diffuse);
-                glMaterialfv(GL_FRONT, GL_SPECULAR, brass_specular);
-                glMaterialf(GL_FRONT, GL_SHININESS, brass_shininess);
+                glMaterialfv(GL_FRONT, GL_AMBIENT, glfMatAmbient);
+                glMaterialfv(GL_FRONT, GL_DIFFUSE, glfMatDiffuse);
+                glMaterialfv(GL_FRONT, GL_SPECULAR, glfMatSpecular);
+                glMaterialf(GL_FRONT, GL_SHININESS, fShininess);
             }
             break;
         case 1:

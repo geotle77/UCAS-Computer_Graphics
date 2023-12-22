@@ -7,7 +7,7 @@ CC = g++
 CFLAGS = -g -lglut -lGLU -lGL -lOpenMeshTools -lOpenMeshCore
 
 # 源文件
-SOURCES = main.cpp simplify.cpp
+SOURCES = main.cpp simplify.cpp showmodel.cpp
 
 # 默认参数
 DEFAULT_ARGS = dragon_repair simplified_dragon 0.5

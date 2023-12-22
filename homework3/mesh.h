@@ -1,3 +1,5 @@
+#ifndef MESH_H
+#define MESH_H
 #include <GL/glut.h>
 #include <iostream>
 #include <time.h>
@@ -24,6 +26,9 @@ struct Vertex{
     double x;
     double y;
     double z;
+    Vertex operator-(const Vertex& other) const {
+        return {x - other.x, y - other.y, z - other.z};
+    }
 };
 struct Texture {
     double TU;
@@ -105,4 +110,4 @@ class mesh
         void Simplify(double target);
         void Savemodel(const string & model_path);
 };
-
+#endif
