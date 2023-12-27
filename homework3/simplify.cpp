@@ -247,7 +247,7 @@ void mesh::DeleteVertex()
                         return;
                     if(linkfaces[c][k]==linkfaces[todelete1][i])
                     {
-                        linkfaces[c].erase(linkfaces[c].begin()+k);//
+                        linkfaces[c].erase(linkfaces[c].begin()+k);
                     }
                     
                 }
@@ -298,7 +298,7 @@ void mesh::DeleteVertex()
         }
     }
     Q.push_back(Matrix4d::Zero());
-    Matrix4d newQ = ComputeQ(vertices.size()-1);
+    Matrix4d newQ = ComputeQ(vertices.size()-1);//newQ仅仅是作为debug使用
     
     link nullpair;
     linkcostheaps.push_back(nullpair);
@@ -355,7 +355,7 @@ void mesh::DeleteVertex()
     linkcostheaps[todelete1].clear();
     linkcostheaps[todelete2].clear();
     link null;
-    linkpoints.push_back(null);
+    linkpoints.push_back(null);//该数据结构实际上并未使用到，但是其可以考虑非相连的点对
     for(int i=0;i<ano.size();i++)
     {
         
