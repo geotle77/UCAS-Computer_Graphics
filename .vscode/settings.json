@@ -47,6 +47,18 @@
         "typeinfo": "cpp",
         "dense": "cpp",
         "sstream": "cpp",
+<<<<<<< HEAD
+        "chrono": "cpp",
+        "complex": "cpp",
+        "cstring": "cpp",
+        "ctime": "cpp",
+        "map": "cpp",
+        "set": "cpp",
+        "ratio": "cpp",
+        "fstream": "cpp",
+        "semaphore": "cpp",
+        "stop_token": "cpp",
+=======
         "complex": "cpp",
         "cstring": "cpp",
         "set": "cpp",
@@ -60,6 +72,7 @@
         "map": "cpp",
         "iomanip": "cpp",
         "mutex": "cpp",
+>>>>>>> 3bacb0b9800f3398d3671e0ae8356e93197d9386
         "thread": "cpp"
     }
 }
